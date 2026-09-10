@@ -11,6 +11,14 @@ export interface CompositeOptions {
   includeHeader?: boolean;
 }
 
+export interface CaptureOptions {
+  scale?: number;
+  showBezel?: boolean;
+  projectTitle?: string;
+  contentHtml?: string;
+  url?: string;
+}
+
 /**
  * Downloads a canvas as a file using dataURL and Blob fallback for maximum reliability
  */
@@ -97,6 +105,90 @@ export function formatBytes(bytes: number, decimals = 1): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+/**
+ * Checks if a canvas is completely blank or transparent
+ */
+function isCanvasBlank(canvas: HTMLCanvasElement): boolean {
+  try {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return true;
+    const width = Math.min(canvas.width, 100);
+    const height = Math.min(canvas.height, 100);
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3];
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      // Check if pixel is non-white and non-transparent
+      if (alpha > 0 && (r !== 255 || g !== 255 || b !== 255)) {
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Renders HTML string directly to Canvas using SVG foreignObject
+ */
+export async function renderHtmlToCanvas(
+  html: string,
+  width: number,
+  height: number,
+  scale = 2
+): Promise<HTMLCanvasElement> {
+  const canvas = document.createElement('canvas');
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  let cleanHtml = html.trim();
+  if (!cleanHtml.toLowerCase().includes('<body')) {
+    cleanHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>html,body{margin:0;padding:0;width:100%;height:100%;font-family:sans-serif;background:#ffffff;}</style></head><body>${cleanHtml}</body></html>`;
+  }
+
+  // Remove scripts to avoid execution during SVG load
+  const sanitizedContent = cleanHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  const svgData = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;background:#ffffff;overflow:hidden;">
+          ${sanitizedContent}
+        </div>
+      </foreignObject>
+    </svg>
+  `;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      resolve(canvas);
+    };
+
+    img.src = url;
+  });
 }
 
 /**
@@ -214,7 +306,7 @@ export function buildDeviceBezelCanvas(
 export async function captureSimulatorViewport(
   frameElement: HTMLElement,
   device: DeviceSpec,
-  options?: { scale?: number; showBezel?: boolean; projectTitle?: string }
+  options?: CaptureOptions
 ): Promise<HTMLCanvasElement> {
   const scale = options?.scale ?? 2;
   const showBezel = options?.showBezel ?? true;
@@ -244,6 +336,7 @@ export async function captureSimulatorViewport(
           x: scrollX,
           y: scrollY,
           window: iframeWin as Window,
+          document: iframeDoc as Document,
           useCORS: true,
           allowTaint: false,
           logging: false,
@@ -251,12 +344,21 @@ export async function captureSimulatorViewport(
         } as any);
       }
     } catch (err) {
-      console.warn('Captura do iframe via contentWindow falhou:', err);
+      console.warn('Captura do iframe via html2canvas falhou:', err);
     }
   }
 
-  // Fallback 1: Capture frameElement directly
-  if (!contentCanvas) {
+  // Fallback 1: If html2canvas returned a blank or null canvas, try SVG foreignObject on contentHtml
+  if ((!contentCanvas || isCanvasBlank(contentCanvas)) && options?.contentHtml) {
+    try {
+      contentCanvas = await renderHtmlToCanvas(options.contentHtml, device.width, device.height, scale);
+    } catch (svgErr) {
+      console.warn('SVG foreignObject render falhou:', svgErr);
+    }
+  }
+
+  // Fallback 2: Capture frameElement directly
+  if (!contentCanvas || isCanvasBlank(contentCanvas)) {
     try {
       const origTransform = frameElement.style.transform;
       frameElement.style.transform = 'none';
@@ -273,7 +375,7 @@ export async function captureSimulatorViewport(
     }
   }
 
-  // Fallback 2: Generate clean canvas placeholder if html2canvas was blocked
+  // Fallback 3: Create a clean base canvas if all capture methods returned empty
   if (!contentCanvas) {
     contentCanvas = document.createElement('canvas');
     contentCanvas.width = device.width * scale;
@@ -282,10 +384,6 @@ export async function captureSimulatorViewport(
     if (ctx) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, contentCanvas.width, contentCanvas.height);
-      ctx.fillStyle = '#2b3674';
-      ctx.font = `bold ${16 * scale}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(projectTitle, contentCanvas.width / 2, contentCanvas.height / 2);
     }
   }
 
@@ -298,11 +396,7 @@ export async function captureSimulatorViewport(
 export async function captureSimulatorFullScroll(
   frameElement: HTMLElement,
   device: DeviceSpec,
-  options?: {
-    scale?: number;
-    showBezel?: boolean;
-    projectTitle?: string;
-  }
+  options?: CaptureOptions
 ): Promise<{ fullCanvas: HTMLCanvasElement; contentCanvas: HTMLCanvasElement }> {
   const scale = options?.scale ?? 2;
   const showBezel = options?.showBezel ?? true;
@@ -348,6 +442,7 @@ export async function captureSimulatorFullScroll(
           x: 0,
           y: 0,
           window: iframeWin as Window,
+          document: iframeDoc as Document,
           useCORS: true,
           allowTaint: false,
           logging: false,
@@ -359,8 +454,16 @@ export async function captureSimulatorFullScroll(
     }
   }
 
+  if ((!contentCanvas || isCanvasBlank(contentCanvas)) && options?.contentHtml) {
+    try {
+      contentCanvas = await renderHtmlToCanvas(options.contentHtml, device.width, device.height, scale);
+    } catch (svgErr) {
+      console.warn('SVG foreignObject Full Scroll render falhou:', svgErr);
+    }
+  }
+
   if (!contentCanvas) {
-    contentCanvas = await captureSimulatorViewport(frameElement, device, { scale, showBezel: false, projectTitle });
+    contentCanvas = await captureSimulatorViewport(frameElement, device, { ...options, showBezel: false });
   }
 
   const fullCanvas = buildDeviceBezelCanvas(contentCanvas, device, { scale, showBezel, projectTitle });

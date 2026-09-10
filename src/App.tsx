@@ -289,6 +289,8 @@ export default function App() {
         scale: 2,
         showBezel,
         projectTitle,
+        contentHtml: activeHtml,
+        url: activeUrl,
       });
       if (captured) {
         setCompositeCanvas(captured);
@@ -330,6 +332,8 @@ export default function App() {
           scale: 2,
           showBezel,
           projectTitle,
+          contentHtml: activeHtml,
+          url: activeUrl,
         }
       );
 
