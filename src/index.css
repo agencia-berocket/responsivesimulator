@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #2b3674;
+    background-color: #e5edf7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+}
+
+/* Soft Neumorphic / Claymorphic Utility Classes strictly matching reference */
+.neu-canvas {
+  background-color: #e5edf7;
+}
+
+/* Grand sculpted dashboard surface */
+.neu-dashboard-panel {
+  background-color: #f0f4fa;
+  border-radius: 40px;
+  box-shadow: 
+    16px 16px 36px rgba(166, 180, 202, 0.45),
+    -16px -16px 36px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Raised card / container */
+.neu-raised {
+  background-color: #f0f4fa;
+  border-radius: 24px;
+  box-shadow: 
+    8px 8px 18px rgba(166, 180, 202, 0.4),
+    -8px -8px 18px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neu-raised:hover {
+  box-shadow: 
+    10px 10px 22px rgba(166, 180, 202, 0.5),
+    -10px -10px 22px rgba(255, 255, 255, 1);
+}
+
+/* Small raised elements (buttons, badges) */
+.neu-raised-sm {
+  background-color: #f0f4fa;
+  border-radius: 16px;
+  box-shadow: 
+    4px 4px 10px rgba(166, 180, 202, 0.35),
+    -4px -4px 10px rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  transition: all 0.15s ease;
+}
+
+.neu-raised-sm:hover {
+  box-shadow: 
+    6px 6px 14px rgba(166, 180, 202, 0.45),
+    -6px -6px 14px rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.neu-raised-sm:active {
+  box-shadow: 
+    inset 2px 2px 5px rgba(166, 180, 202, 0.4),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+  transform: translateY(0);
+}
+
+/* Sunken / Debossed track for tabs, inputs, and toggle tracks */
+.neu-sunken {
+  background-color: #e6edf7;
+  border-radius: 9999px;
+  box-shadow: 
+    inset 3px 3px 6px rgba(166, 180, 202, 0.4),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.neu-sunken-box {
+  background-color: #e6edf7;
+  border-radius: 20px;
+  box-shadow: 
+    inset 3px 3px 7px rgba(166, 180, 202, 0.4),
+    inset -3px -3px 7px rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Floating active pill inside sunken track (matching Day/Week/Month/Total in ref) */
+.neu-pill-active {
+  background-color: #f4f7fc;
+  border-radius: 9999px;
+  box-shadow: 
+    3px 3px 8px rgba(166, 180, 202, 0.35),
+    -3px -3px 8px rgba(255, 255, 255, 0.95);
+  color: #2b3674;
+  font-weight: 700;
+}
+
+/* Navigation button: active raised state */
+.neu-nav-active {
+  background-color: #f0f4fa;
+  box-shadow: 
+    6px 6px 14px rgba(166, 180, 202, 0.45),
+    -6px -6px 14px rgba(255, 255, 255, 1);
+  color: #5b5de5;
+}
+
+/* Navigation button: inactive flat/sunken state */
+.neu-nav-inactive {
+  color: #8fa0b5;
+}
+.neu-nav-inactive:hover {
+  background-color: #f0f4fa;
+  box-shadow: 
+    3px 3px 8px rgba(166, 180, 202, 0.25),
+    -3px -3px 8px rgba(255, 255, 255, 0.8);
+  color: #4345c2;
+}
+
+/* Neumorphic switch like the ON buttons on the reference watchlist */
+.neu-switch-on {
+  background-color: #f0f4fa;
+  box-shadow: 
+    inset 2px 2px 4px rgba(166, 180, 202, 0.4),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.9);
+}
+
+/* Delicate subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(166, 180, 202, 0.45);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(91, 93, 229, 0.5);
+}

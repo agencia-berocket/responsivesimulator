@@ -1,0 +1,8 @@
+{
+  "name": "Simulador Responsivo & Comparador de Telas",
+  "description": "Simulador de resoluções de telas mobile e desktop com suporte a arquivos .index, pastas locais completas, URLs reais da web e exportação em JPG e PNG.",
+  "author": "b.rocket",
+  "email": "berocket@berocket.com.br",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
