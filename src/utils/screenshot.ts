@@ -113,9 +113,9 @@ function isCanvasBlank(canvas: HTMLCanvasElement): boolean {
 }
 
 /**
- * Creates a temporary, non-sandboxed hidden iframe, writes HTML into it,
- * waits for it to load, and then runs html2canvas on its body.
- * This is the only reliable method to capture HTML content.
+ * Strategy 1 (best quality for local-project / editor mode):
+ * Creates a hidden, non-sandboxed iframe, writes HTML into it,
+ * waits for it to load, then runs html2canvas on its body.
  */
 async function captureHtmlInOffscreenIframe(
   html: string,
@@ -125,7 +125,6 @@ async function captureHtmlInOffscreenIframe(
   fullScroll = false
 ): Promise<HTMLCanvasElement | null> {
   return new Promise((resolve) => {
-    // Create hidden iframe with NO sandbox restriction so html2canvas can access contentDocument
     const iframe = document.createElement('iframe');
     iframe.style.cssText = [
       'position:fixed',
@@ -154,19 +153,23 @@ async function captureHtmlInOffscreenIframe(
       clearTimeout(timeout);
       try {
         const iDoc = iframe.contentDocument;
-        const iWin = iframe.contentWindow;
-        if (!iDoc || !iWin) return cleanup(null);
+        if (!iDoc) return cleanup(null);
 
         const body = iDoc.body || iDoc.documentElement;
 
-        // Give scripts a tiny moment to execute
-        await new Promise((r) => setTimeout(r, 300));
+        // Give scripts a moment to execute
+        await new Promise((r) => setTimeout(r, 350));
 
         const captureW = fullScroll
           ? Math.max(body.scrollWidth, body.offsetWidth, width)
           : width;
         const captureH = fullScroll
-          ? Math.max(body.scrollHeight, body.offsetHeight, iDoc.documentElement.scrollHeight, height)
+          ? Math.max(
+              body.scrollHeight,
+              body.offsetHeight,
+              iDoc.documentElement.scrollHeight,
+              height
+            )
           : height;
 
         const canvas = await html2canvas(body, {
@@ -197,7 +200,6 @@ async function captureHtmlInOffscreenIframe(
       cleanup(null);
     };
 
-    // Write the html into the iframe - srcdoc preserves everything including styles
     try {
       iframe.srcdoc = html;
     } catch {
@@ -215,7 +217,7 @@ async function captureHtmlInOffscreenIframe(
 }
 
 /**
- * Renders HTML string to canvas via SVG foreignObject (fallback, no external resources)
+ * Strategy 2 (fallback): SVG foreignObject render — no external resources
  */
 async function renderHtmlFallback(
   html: string,
@@ -228,7 +230,6 @@ async function renderHtmlFallback(
   canvas.height = height * scale;
   const ctx = canvas.getContext('2d')!;
 
-  // Strip scripts for safety in SVG
   const safe = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -258,6 +259,112 @@ async function renderHtmlFallback(
     };
     img.src = url;
   });
+}
+
+/**
+ * Strategy 3 (URL mode): Uses Screen Capture API (getDisplayMedia) to capture
+ * exactly what's visible in the iframe — works for ANY URL, bypasses CORS.
+ * The user will see a browser permission dialog to share their tab.
+ */
+async function captureViaDisplayMedia(
+  frameElement: HTMLElement,
+  device: DeviceSpec,
+  scale: number
+): Promise<HTMLCanvasElement | null> {
+  const iframe = frameElement.querySelector('iframe');
+  if (!iframe) return null;
+
+  let stream: MediaStream | null = null;
+
+  try {
+    stream = await (navigator.mediaDevices as any).getDisplayMedia({
+      video: {
+        displaySurface: 'browser',
+        width: { ideal: window.screen.width * (window.devicePixelRatio || 1) },
+        height: { ideal: window.screen.height * (window.devicePixelRatio || 1) },
+        frameRate: { ideal: 30 },
+      },
+      audio: false,
+      // Chrome 94+ hint: pre-select current tab
+      preferCurrentTab: true,
+    } as any);
+  } catch (err: any) {
+    // NotAllowedError = user cancelled the dialog
+    const name = err?.name || '';
+    if (name === 'NotAllowedError' || name === 'AbortError') {
+      throw Object.assign(new Error('USER_CANCELLED'), { code: 'USER_CANCELLED' });
+    }
+    console.warn('[screenshot] getDisplayMedia failed:', err);
+    return null;
+  }
+
+  try {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.autoplay = true;
+    video.srcObject = stream;
+
+    await new Promise<void>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('video timeout')), 8000);
+      video.onloadedmetadata = () => { clearTimeout(t); resolve(); };
+      video.onerror = () => { clearTimeout(t); reject(new Error('video error')); };
+    });
+
+    await video.play();
+
+    // Wait 2 animation frames for pixel data to be available
+    await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+    // Draw full captured screen to canvas
+    const screenCanvas = document.createElement('canvas');
+    screenCanvas.width = video.videoWidth;
+    screenCanvas.height = video.videoHeight;
+    const screenCtx = screenCanvas.getContext('2d')!;
+    screenCtx.drawImage(video, 0, 0);
+
+    // Stop the stream
+    stream.getTracks().forEach((t) => t.stop());
+
+    // Get iframe's visual bounding rect in viewport space
+    const iframeRect = iframe.getBoundingClientRect();
+
+    if (iframeRect.width < 4 || iframeRect.height < 4) {
+      console.warn('[screenshot] iframe rect too small:', iframeRect);
+      return null;
+    }
+
+    // Map viewport coordinates to captured video coordinates
+    const vpW = window.innerWidth;
+    const vpH = window.innerHeight;
+    const capW = video.videoWidth;
+    const capH = video.videoHeight;
+
+    const rxScale = capW / vpW;
+    const ryScale = capH / vpH;
+
+    const cropX = iframeRect.left * rxScale;
+    const cropY = iframeRect.top * ryScale;
+    const cropW = iframeRect.width * rxScale;
+    const cropH = iframeRect.height * ryScale;
+
+    // Output at device resolution × scale (high quality)
+    const outW = Math.round(device.width * scale);
+    const outH = Math.round(device.height * scale);
+
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = outW;
+    outCanvas.height = outH;
+    const outCtx = outCanvas.getContext('2d')!;
+    outCtx.imageSmoothingEnabled = true;
+    outCtx.imageSmoothingQuality = 'high';
+    outCtx.drawImage(screenCanvas, cropX, cropY, cropW, cropH, 0, 0, outW, outH);
+
+    return outCanvas;
+  } catch (err) {
+    stream?.getTracks().forEach((t) => t.stop());
+    console.warn('[screenshot] displayMedia processing failed:', err);
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -300,25 +407,25 @@ export function buildDeviceBezelCanvas(
   ctx.fill();
 
   if (isDesktop) {
-    // Header bar
     ctx.fillStyle = '#1f2937';
     ctx.fillRect(0, 0, totalW, headerH * scale);
 
     const dotY = (headerH / 2) * scale;
     const dotR = 5 * scale;
-    [['#ef4444', 16], ['#f59e0b', 32], ['#10b981', 48]].forEach(([color, x]) => {
-      ctx.fillStyle = color as string;
-      ctx.beginPath();
-      ctx.arc((x as number) * scale, dotY, dotR, 0, Math.PI * 2);
-      ctx.fill();
-    });
+    ([['#ef4444', 16], ['#f59e0b', 32], ['#10b981', 48]] as [string, number][]).forEach(
+      ([color, x]) => {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x * scale, dotY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    );
 
     ctx.fillStyle = '#9ca3af';
     ctx.font = `bold ${12 * scale}px -apple-system, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillText(`${projectTitle} — ${device.name}`, totalW / 2, dotY + 4 * scale);
   } else {
-    // Mobile status bar
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, totalW, headerH * scale);
     ctx.fillStyle = '#fff';
@@ -329,10 +436,8 @@ export function buildDeviceBezelCanvas(
     ctx.fillText(device.name, totalW - 20 * scale, 28 * scale);
   }
 
-  // Content
   ctx.drawImage(contentCanvas, border * scale, (headerH + border) * scale);
 
-  // Mobile home bar
   if (isMobile) {
     const barY = (headerH + border) * scale + cH;
     ctx.fillStyle = '#000';
@@ -352,11 +457,16 @@ export function buildDeviceBezelCanvas(
 // ---------------------------------------------------------------------------
 
 /**
- * Captures current viewport of simulator.
- * Strategy: offscreen iframe (reliable) → SVG foreignObject (fallback) → blank
+ * Captures the current viewport of the simulator device frame.
+ *
+ * Strategy order:
+ *  1. If HTML content is available (local-project / editor): offscreen iframe → html2canvas
+ *  2. If HTML available but step 1 fails: SVG foreignObject fallback
+ *  3. If URL mode (no HTML): Screen Capture API (getDisplayMedia) — crops to the iframe area
+ *  4. If all fail: white blank canvas
  */
 export async function captureSimulatorViewport(
-  _frameElement: HTMLElement,
+  frameElement: HTMLElement,
   device: DeviceSpec,
   options?: CaptureOptions
 ): Promise<HTMLCanvasElement> {
@@ -367,19 +477,24 @@ export async function captureSimulatorViewport(
 
   let contentCanvas: HTMLCanvasElement | null = null;
 
-  // Strategy 1: offscreen iframe → html2canvas (best quality, scripts run)
   if (html) {
-    contentCanvas = await captureHtmlInOffscreenIframe(html, device.width, device.height, scale, false);
+    // Local-project / editor / template mode
+    contentCanvas = await captureHtmlInOffscreenIframe(
+      html, device.width, device.height, scale, false
+    );
+
+    if (!contentCanvas || isCanvasBlank(contentCanvas)) {
+      try {
+        contentCanvas = await renderHtmlFallback(html, device.width, device.height, scale);
+      } catch {}
+    }
+  } else {
+    // URL mode: use Screen Capture API
+    // NOTE: This may throw { code: 'USER_CANCELLED' } if user dismisses the dialog
+    contentCanvas = await captureViaDisplayMedia(frameElement, device, scale);
   }
 
-  // Strategy 2: SVG foreignObject (no external resources, but still captures styles)
-  if ((!contentCanvas || isCanvasBlank(contentCanvas)) && html) {
-    try {
-      contentCanvas = await renderHtmlFallback(html, device.width, device.height, scale);
-    } catch {}
-  }
-
-  // Strategy 3: white blank canvas
+  // Fallback: blank white canvas
   if (!contentCanvas) {
     contentCanvas = document.createElement('canvas');
     contentCanvas.width = device.width * scale;
@@ -393,7 +508,8 @@ export async function captureSimulatorViewport(
 }
 
 /**
- * Captures full scrollable height of the page.
+ * Captures the full scrollable page inside the simulator.
+ * For URL mode, falls back to viewport capture (full scroll requires DOM access).
  */
 export async function captureSimulatorFullScroll(
   frameElement: HTMLElement,
@@ -407,14 +523,28 @@ export async function captureSimulatorFullScroll(
 
   let contentCanvas: HTMLCanvasElement | null = null;
 
-  // Strategy 1: offscreen iframe with full scroll dimensions
   if (html) {
-    contentCanvas = await captureHtmlInOffscreenIframe(html, device.width, device.height, scale, true);
-  }
+    contentCanvas = await captureHtmlInOffscreenIframe(
+      html, device.width, device.height, scale, true
+    );
 
-  // Strategy 2: viewport capture
-  if (!contentCanvas || isCanvasBlank(contentCanvas)) {
-    contentCanvas = await captureSimulatorViewport(frameElement, device, { ...options, showBezel: false });
+    if (!contentCanvas || isCanvasBlank(contentCanvas)) {
+      contentCanvas = await captureSimulatorViewport(frameElement, device, {
+        ...options,
+        showBezel: false,
+      });
+    }
+  } else {
+    // URL mode: use Screen Capture API (viewport only — full scroll not possible for cross-origin)
+    contentCanvas = await captureViaDisplayMedia(frameElement, device, scale);
+    if (!contentCanvas) {
+      contentCanvas = document.createElement('canvas');
+      contentCanvas.width = device.width * scale;
+      contentCanvas.height = device.height * scale;
+      const ctx = contentCanvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, contentCanvas.width, contentCanvas.height);
+    }
   }
 
   const fullCanvas = buildDeviceBezelCanvas(contentCanvas, device, { scale, showBezel, projectTitle });
