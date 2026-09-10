@@ -283,13 +283,15 @@ export default function App() {
       return;
     }
     setIsCapturing(true);
+    notify('Gerando captura de tela…');
 
     try {
+      const htmlForCapture = await resolveHtmlForCapture();
       const captured = await captureSimulatorViewport(targetRef.current, device, {
         scale: 2,
         showBezel,
         projectTitle,
-        contentHtml: activeHtml,
+        contentHtml: htmlForCapture,
         url: activeUrl,
       });
       if (captured) {
@@ -299,10 +301,9 @@ export default function App() {
         } else {
           setDesktopCanvas(captured);
         }
-
         const filename = `captura-tela-${device.name.toLowerCase().replace(/\s+/g, '-')}`;
         downloadCanvas(captured, filename, 'png');
-        notify(`Captura de Tela PNG (${device.name}) baixada com sucesso!`);
+        notify(`✅ Captura de Tela PNG (${device.name}) baixada!`);
       }
     } catch (error) {
       console.error('Erro ao capturar tela:', error);
@@ -323,8 +324,10 @@ export default function App() {
       return;
     }
     setIsCapturing(true);
+    notify('Gerando exportação completa…');
 
     try {
+      const htmlForCapture = await resolveHtmlForCapture();
       const { fullCanvas, contentCanvas } = await captureSimulatorFullScroll(
         targetRef.current,
         device,
@@ -332,7 +335,7 @@ export default function App() {
           scale: 2,
           showBezel,
           projectTitle,
-          contentHtml: activeHtml,
+          contentHtml: htmlForCapture,
           url: activeUrl,
         }
       );
@@ -344,15 +347,14 @@ export default function App() {
         setDesktopCanvas(contentCanvas);
       }
 
-      // Download automático instantâneo
       const filename = `exportacao-${device.name.toLowerCase().replace(/\s+/g, '-')}`;
       downloadCanvas(fullCanvas, filename, 'png');
 
       setIsExportModalOpen(true);
-      notify(`Exportação PNG (${device.name}) baixada com sucesso!`);
+      notify(`✅ Exportação PNG (${device.name}) baixada!`);
     } catch (error) {
       console.error('Erro ao exportar full scroll:', error);
-      notify('Falha ao gerar exportação. Verifique o conteúdo do iframe.');
+      notify('Falha ao gerar exportação.');
     } finally {
       setIsCapturing(false);
     }
@@ -363,7 +365,35 @@ export default function App() {
       ? localProject?.resolvedHtml || editorCode
       : sourceType === 'template' || sourceType === 'editor'
       ? editorCode
-      : '';
+      : ''; // URL mode: html is fetched dynamically at capture time
+
+  /**
+   * Returns HTML to render: either the activeHtml (template/editor/local)
+   * or, for URL mode, tries to fetch the page; falls back to a placeholder.
+   */
+  const resolveHtmlForCapture = async (): Promise<string> => {
+    if (sourceType !== 'url') return activeHtml;
+    try {
+      const resp = await fetch(activeUrl, { mode: 'cors' });
+      if (resp.ok) return await resp.text();
+    } catch {}
+    // Friendly placeholder for cross-origin URLs
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{background:#f8fafc;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:2rem;max-width:380px;text-align:center}
+.icon{font-size:3rem;margin-bottom:1rem}
+h2{color:#2b3674;font-size:1.2rem;margin-bottom:.5rem}
+p{color:#6b7280;font-size:.875rem;line-height:1.6}
+a{color:#5b5de5;word-break:break-all}
+</style></head><body>
+<div class="card">
+  <div class="icon">🌐</div>
+  <h2>Captura Externa</h2>
+  <p>A página <a href="${activeUrl}" target="_blank">${activeUrl}</a> não pode ser capturada diretamente por restrições de segurança do navegador (CORS).</p>
+  <p style="margin-top:.75rem;font-size:.75rem;color:#9ca3af">Use o modo <strong>Projeto Local</strong> ou <strong>Editor</strong> para capturar imagens.</p>
+</div></body></html>`;
+  };
 
   return (
     <div className="min-h-screen bg-[#e5edf7] text-[#2b3674] flex items-center justify-center p-2 sm:p-4 lg:p-6 selection:bg-[#5b5de5] selection:text-white">
