@@ -32,12 +32,13 @@ import {
 } from './utils/screenshot';
 import {
   Sparkles,
-  Smartphone,
-  Monitor,
   CheckCircle2,
 } from 'lucide-react';
+import { useLanguage } from './i18n/LanguageContext';
 
 export default function App() {
+  const { t } = useLanguage();
+
   // Device selections
   const [mobileDevice, setMobileDevice] = useState<DeviceSpec>(POPULAR_MOBILE_DEVICES[0]);
   const [desktopDevice, setDesktopDevice] = useState<DeviceSpec>(POPULAR_DESKTOP_DEVICES[0]);
@@ -64,7 +65,7 @@ export default function App() {
   // Content state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('ecommerce');
   const [editorCode, setEditorCode] = useState<string>(BUILTIN_TEMPLATES[0].html);
-  const [urlInput, setUrlInput] = useState<string>('https://example.com');
+  const [urlInput, setUrlInput] = useState<string>('');
   const [activeUrl, setActiveUrl] = useState<string>('https://example.com');
 
   // Screenshot capture & export modal state
@@ -91,19 +92,20 @@ export default function App() {
     const tmpl = BUILTIN_TEMPLATES.find((t) => t.id === templateId);
     if (tmpl) {
       setEditorCode(tmpl.html);
-      notify(`Modelo "${tmpl.name}" carregado.`);
+      notify(t('app.templateLoaded', { name: tmpl.name }));
     }
   };
 
   const handleUrlSubmit = () => {
     let formatted = urlInput.trim();
-    if (!formatted) return;
+    if (!formatted) {
+      formatted = activeUrl || 'https://example.com';
+    }
     if (!/^https?:\/\//i.test(formatted)) {
       formatted = 'https://' + formatted;
-      setUrlInput(formatted);
     }
     setActiveUrl(formatted);
-    notify(`Carregando URL: ${formatted}`);
+    notify(t('app.urlLoading', { url: formatted }));
   };
 
   // Carregar arquivos de pasta local ou arquivo .index avulso
@@ -118,13 +120,13 @@ export default function App() {
         setProjectTitle(project.folderName);
       }
       notify(
-        `Pasta "${project.folderName}" carregada! ${project.totalFiles} arquivos mapeados.`
+        t('app.folderLoaded', { name: project.folderName, n: project.totalFiles })
       );
     } catch (err) {
       console.error('Erro ao processar pasta local:', err);
       const msg = err instanceof Error ? err.message : 'Falha ao processar arquivos da pasta.';
       setLocalError(msg);
-      notify(`Erro: ${msg}`);
+      notify(t('app.folderError', { msg }));
     } finally {
       setIsLoadingLocal(false);
     }
@@ -243,10 +245,10 @@ export default function App() {
         entryHtmlFile: file,
         resolvedHtml: finalHtml,
       });
-      notify(`Arquivo de entrada alterado para "${file.name}"`);
+      notify(t('app.entryChanged', { name: file.name }));
     } catch (e) {
       console.error(e);
-      notify(`Erro ao alternar arquivo: ${String(e)}`);
+      notify(t('app.entryError', { err: String(e) }));
     }
   };
 
@@ -264,7 +266,7 @@ export default function App() {
         if (match && (match.extension === 'html' || match.extension === 'htm')) {
           handleSelectEntryFile(match);
         } else {
-          notify(`Link local "${rawHref}" protegido contra redirecionamento.`);
+          notify(t('app.linkProtected', { href: rawHref }));
         }
       }
     };
@@ -279,7 +281,7 @@ export default function App() {
     const device = viewMode === 'mobile-only' ? mobileDevice : desktopDevice;
 
     if (!targetRef.current) {
-      notify('Elemento do dispositivo não encontrado para captura.');
+      notify(t('app.captureNotFound'));
       return;
     }
     setIsCapturing(true);
@@ -287,7 +289,7 @@ export default function App() {
     if (sourceType === 'url') {
       notify('📸 Compartilhe sua aba quando solicitado pelo navegador…');
     } else {
-      notify('Gerando captura de tela…');
+      notify(t('app.capturing'));
     }
 
     try {
@@ -307,14 +309,14 @@ export default function App() {
         }
         const filename = `captura-tela-${device.name.toLowerCase().replace(/\s+/g, '-')}`;
         downloadCanvas(captured, filename, 'png');
-        notify(`✅ Captura de Tela PNG (${device.name}) baixada!`);
+        notify(t('app.captureSuccess', { name: device.name }));
       }
     } catch (error: any) {
       if (error?.code === 'USER_CANCELLED' || error?.message === 'USER_CANCELLED') {
         notify('Captura cancelada.');
       } else {
         console.error('Erro ao capturar tela:', error);
-        notify('Ocorreu um erro ao capturar a tela.');
+        notify(t('app.captureError'));
       }
     } finally {
       setIsCapturing(false);
@@ -328,7 +330,7 @@ export default function App() {
     const device = viewMode === 'mobile-only' ? mobileDevice : desktopDevice;
 
     if (!targetRef.current) {
-      notify('Elemento do dispositivo não encontrado para exportação.');
+      notify(t('app.exportNotFound'));
       return;
     }
     setIsCapturing(true);
@@ -336,7 +338,7 @@ export default function App() {
     if (sourceType === 'url') {
       notify('📸 Compartilhe sua aba quando solicitado pelo navegador…');
     } else {
-      notify('Gerando exportação completa…');
+      notify(t('app.exporting'));
     }
 
     try {
@@ -363,13 +365,13 @@ export default function App() {
       downloadCanvas(fullCanvas, filename, 'png');
 
       setIsExportModalOpen(true);
-      notify(`✅ Exportação PNG (${device.name}) baixada!`);
+      notify(t('app.exportSuccess', { name: device.name }));
     } catch (error: any) {
       if (error?.code === 'USER_CANCELLED' || error?.message === 'USER_CANCELLED') {
         notify('Captura cancelada.');
       } else {
         console.error('Erro ao exportar full scroll:', error);
-        notify('Falha ao gerar exportação.');
+        notify(t('app.exportError'));
       }
     } finally {
       setIsCapturing(false);
@@ -419,7 +421,7 @@ export default function App() {
           onResetZoom={() => {
             setMobileScale(0.85);
             setDesktopScale(0.55);
-            notify('Escala restaurada para o padrão.');
+            notify(t('app.zoomReset'));
           }}
           onToggleSuperFocus={() => setIsSuperFocus(true)}
         />
@@ -464,7 +466,7 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <span className="text-[#8fa0b5] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-[#5b5de5]" />
-                  Breakpoints Rápidos:
+                  {t('bp.label')}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {BREAKPOINT_PRESETS.map((bp) => (
@@ -484,7 +486,7 @@ export default function App() {
                             bezelStyle: 'none',
                           });
                           setViewMode('mobile-only');
-                          notify(`Mobile ajustado para ${bp.width}px (${bp.label})`);
+                          notify(t('app.bpMobile', { w: bp.width, label: bp.label }));
                         } else {
                           setDesktopDevice({
                             id: `custom-${bp.width}`,
@@ -497,7 +499,7 @@ export default function App() {
                             bezelStyle: 'none',
                           });
                           setViewMode('desktop-only');
-                          notify(`Desktop ajustado para ${bp.width}px (${bp.label})`);
+                          notify(t('app.bpDesktop', { w: bp.width, label: bp.label }));
                         }
                       }}
                       className="px-3 py-1 text-[#2b3674] hover:text-[#5b5de5] rounded-full text-[11px] font-mono font-bold neu-raised-sm hover:scale-105 active:scale-95 transition-all"
@@ -510,7 +512,7 @@ export default function App() {
 
               <div className="flex items-center gap-3 text-[#8fa0b5] text-[11px] font-semibold">
                 <span className="hidden sm:inline">
-                  Escala: {viewMode === 'mobile-only' ? 'Mobile' : 'Desktop'}{' '}
+                  {t('bp.scale')}{' '}
                   <strong className="text-[#5b5de5] font-mono">
                     {Math.round((viewMode === 'mobile-only' ? mobileScale : desktopScale) * 100)}%
                   </strong>
@@ -520,11 +522,11 @@ export default function App() {
                   onClick={() => {
                     setMobileScale(0.85);
                     setDesktopScale(0.55);
-                    notify('Escala restaurada para o padrão.');
+                    notify(t('app.zoomReset'));
                   }}
                   className="text-[#5b5de5] hover:text-[#2b3674] font-bold transition-colors underline"
                 >
-                  Resetar Zoom
+                  {t('bp.resetZoom')}
                 </button>
               </div>
             </div>
@@ -578,7 +580,7 @@ export default function App() {
                     contentHtml={activeHtml}
                     url={activeUrl}
                     frameRef={mobileFrameRef}
-                    label="Dispositivo Mobile"
+                    label={t('view.mobile')}
                   />
                 </div>
               ) : (
@@ -599,7 +601,7 @@ export default function App() {
                     contentHtml={activeHtml}
                     url={activeUrl}
                     frameRef={desktopFrameRef}
-                    label="Dispositivo Desktop"
+                    label={t('view.desktop')}
                   />
                 </div>
               )}
@@ -615,12 +617,12 @@ export default function App() {
           onSelectMobileDevice={(dev) => {
             setMobileDevice(dev);
             setViewMode('mobile-only');
-            notify(`Dispositivo mobile: ${dev.name}`);
+            notify(t('app.deviceMobile', { name: dev.name }));
           }}
           onSelectDesktopDevice={(dev) => {
             setDesktopDevice(dev);
             setViewMode('desktop-only');
-            notify(`Dispositivo desktop: ${dev.name}`);
+            notify(t('app.deviceDesktop', { name: dev.name }));
           }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -640,11 +642,11 @@ export default function App() {
         activeDesktopDevice={desktopDevice}
         onSelectMobileDevice={(dev) => {
           setMobileDevice(dev);
-          notify(`Super Foco: ${dev.name}`);
+          notify(t('app.sfDevice', { name: dev.name }));
         }}
         onSelectDesktopDevice={(dev) => {
           setDesktopDevice(dev);
-          notify(`Super Foco: ${dev.name}`);
+          notify(t('app.sfDevice', { name: dev.name }));
         }}
         mobileOrientation={mobileOrientation}
         desktopOrientation={desktopOrientation}

@@ -10,6 +10,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { SourceType } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export type ActiveNavTab = 'simulator' | 'source' | 'editor' | 'breakpoints';
 
@@ -38,26 +39,28 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
   onResetZoom,
   onToggleSuperFocus,
 }) => {
+  const { t } = useLanguage();
+
   const navItems = [
     {
       id: 'simulator' as ActiveNavTab,
-      label: 'Simulador Responsivo',
+      label: t('nav.simulator'),
       icon: Monitor,
     },
     {
       id: 'source' as ActiveNavTab,
-      label: 'Pasta .Index / URL',
+      label: t('nav.source'),
       icon: hasLocalProject ? FolderArchive : Globe,
       pulse: hasLocalProject || !!activeUrl,
     },
     {
       id: 'editor' as ActiveNavTab,
-      label: 'Editor de Código',
+      label: t('nav.editor'),
       icon: Code,
     },
     {
       id: 'breakpoints' as ActiveNavTab,
-      label: 'Breakpoints & Escala',
+      label: t('nav.breakpoints'),
       icon: SlidersHorizontal,
     },
   ];
@@ -73,7 +76,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
           type="button"
           onClick={() => onSelectTab('simulator')}
           className="relative w-11 h-11 rounded-[18px] bg-gradient-to-br from-[#181954] via-[#2a2b7e] to-[#4344be] flex items-center justify-center transition-all duration-200 active:scale-95 shadow-[5px_5px_12px_rgba(166,180,202,0.5),-3px_-3px_8px_rgba(255,255,255,0.9)] hover:shadow-[6px_6px_14px_rgba(42,43,126,0.35),-4px_-4px_10px_rgba(255,255,255,1)] group"
-          title="Simulador Responsivo - Mac Desktop"
+          title={t('nav.logoTitle')}
         >
           {/* Mac Desktop Icon */}
           <svg
@@ -136,12 +139,12 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
           <button
             type="button"
             onClick={onToggleSuperFocus}
-            title="Modo Super Foco (Ampliar tela)"
+            title={t('nav.superFocus')}
             className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-[#5b5de5] hover:text-[#4344be] neu-raised-sm active:scale-95 group transition-all bg-[#edf2fa]"
           >
             <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
             <div className="absolute left-16 px-3 py-1.5 neu-raised text-[#5b5de5] text-xs font-bold rounded-xl whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 z-50 shadow-md">
-              Modo Super Foco
+              {t('nav.superFocus')}
             </div>
           </button>
         )}
@@ -151,7 +154,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
           type="button"
           onClick={onCaptureScreenshot}
           disabled={isCapturing}
-          title="Tirar Captura de Tela"
+          title={t('nav.capture')}
           className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-[#8fa0b5] hover:text-[#2b3674] neu-raised-sm active:scale-95 group transition-all"
         >
           <Camera
@@ -164,7 +167,7 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({
           <button
             type="button"
             onClick={onResetZoom}
-            title="Resetar Zoom"
+            title={t('nav.resetZoom')}
             className="w-10 h-10 rounded-2xl flex items-center justify-center text-[#8fa0b5] hover:text-[#2b3674] neu-raised-sm active:scale-95 transition-all"
           >
             <RotateCcw className="w-4 h-4" />

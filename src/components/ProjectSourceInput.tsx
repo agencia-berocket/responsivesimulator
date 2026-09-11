@@ -7,16 +7,14 @@ import {
   CheckCircle2,
   FolderOpen,
   FileText,
-  Layers,
   RefreshCw,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
   AlertTriangle,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 import { ParsedProject, ProjectFile, formatBytes } from '../utils/localFolderParser';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ProjectSourceInputProps {
   id?: string;
@@ -47,6 +45,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
   onUrlChange,
   onUrlSubmit,
 }) => {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [showFileList, setShowFileList] = useState(false);
 
@@ -140,7 +139,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
               }`}
             >
               <FolderArchive className={`w-4 h-4 ${isLocalActive ? 'text-[#5b5de5]' : ''}`} />
-              <span>Pasta Local (.Index)</span>
+              <span>{t('source.localTab')}</span>
               {localProject && (
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               )}
@@ -156,7 +155,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
               }`}
             >
               <Globe className={`w-4 h-4 ${isUrlActive ? 'text-[#5b5de5]' : ''}`} />
-              <span>URL da Web</span>
+              <span>{t('source.urlTab')}</span>
               {isUrlActive && activeUrl && (
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               )}
@@ -167,11 +166,11 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
         <div className="text-xs text-[#8fa0b5] font-medium">
           {isLocalActive ? (
             <span className="hidden sm:inline">
-              Insira o arquivo <strong className="font-mono text-[#5b5de5]">index.html</strong> ou selecione a pasta completa do projeto.
+              {t('source.localHint')}
             </span>
           ) : isUrlActive ? (
             <span className="hidden sm:inline">
-              Digite uma URL de produção ou servidor de desenvolvimento local (ex: <strong className="font-mono text-[#5b5de5]">localhost:3000</strong>).
+              {t('source.urlHint')}
             </span>
           ) : null}
         </div>
@@ -184,10 +183,10 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
             <div className="p-8 neu-sunken-box flex flex-col items-center justify-center text-center gap-3">
               <RefreshCw className="w-8 h-8 text-[#5b5de5] animate-spin" />
               <p className="text-sm font-bold text-[#2b3674]">
-                Lendo estrutura da pasta e resolvendo links de assets...
+                {t('source.loading')}
               </p>
               <p className="text-xs text-[#8fa0b5]">
-                Mapeando arquivos HTML, folhas de estilo CSS, scripts e imagens locais em memória.
+                {t('source.loadingDetail')}
               </p>
             </div>
           ) : localProject ? (
@@ -204,23 +203,23 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                         {localProject.folderName}
                       </span>
                       <span className="bg-[#e6edf7] text-[#5b5de5] text-[10px] font-bold px-2 py-0.5 rounded-full neu-sunken">
-                        {localProject.totalFiles} arquivos
+                        {t('header.filesCount', { n: localProject.totalFiles })}
                       </span>
                       <span className="text-xs text-[#8fa0b5] font-mono">
                         {formatBytes(localProject.totalBytes)}
                       </span>
                     </div>
                     <p className="text-xs text-[#8fa0b5] mt-1 flex items-center gap-1.5 flex-wrap font-semibold">
-                      <span>Ponto de entrada:</span>
+                      <span>{t('source.entryPoint')}</span>
                       <span className="font-mono text-[#2b3674] bg-[#e6edf7] px-2 py-0.5 rounded font-bold">
                         {localProject.entryFileName}
                       </span>
                       <span className="text-[#a3b1c2]">•</span>
                       <span>{localProject.cssCount} CSS</span>
                       <span className="text-[#a3b1c2]">•</span>
-                      <span>{localProject.jsCount} Scripts</span>
+                      <span>{t('source.scripts', { n: localProject.jsCount })}</span>
                       <span className="text-[#a3b1c2]">•</span>
-                      <span>{localProject.imageCount} Imagens</span>
+                      <span>{t('source.images', { n: localProject.imageCount })}</span>
                     </p>
                   </div>
                 </div>
@@ -231,7 +230,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                     onClick={() => setShowFileList((prev) => !prev)}
                     className="flex items-center gap-1.5 text-xs font-bold text-[#2b3674] neu-raised-sm px-3.5 py-2 rounded-xl hover:scale-105 active:scale-95 transition-all"
                   >
-                    <span>Estrutura</span>
+                    <span>{t('source.structure')}</span>
                     {showFileList ? (
                       <ChevronUp className="w-3.5 h-3.5" />
                     ) : (
@@ -245,7 +244,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                     className="flex items-center gap-1.5 text-xs font-bold text-[#5b5de5] neu-raised-sm px-4 py-2 rounded-xl hover:scale-105 active:scale-95 transition-all"
                   >
                     <FolderOpen className="w-4 h-4" />
-                    <span>Trocar Pasta</span>
+                    <span>{t('source.changeFolder')}</span>
                   </button>
                 </div>
               </div>
@@ -255,10 +254,10 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 <div className="neu-sunken-box p-4">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-[#2b3674]">
-                      Arquivos do Projeto Carregado:
+                      {t('source.loadedFiles')}
                     </span>
                     <span className="text-[11px] text-[#8fa0b5]">
-                      Clique em qualquer HTML para torná-lo a tela ativa
+                      {t('source.clickHtmlTip')}
                     </span>
                   </div>
 
@@ -321,10 +320,10 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
 
               <div className="max-w-md">
                 <h3 className="text-base font-extrabold text-[#2b3674] tracking-tight">
-                  Arraste aqui a pasta do projeto ou o arquivo .index
+                  {t('source.dragTitle')}
                 </h3>
                 <p className="text-xs text-[#8fa0b5] mt-1 font-semibold leading-relaxed">
-                  O simulador lê automaticamente o <span className="font-mono text-[#5b5de5]">index.html</span> e resolve todos os arquivos CSS, JS e imagens locais sem enviar nada para servidores externos.
+                  {t('source.dragDesc')}
                 </p>
               </div>
 
@@ -335,7 +334,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                   className="flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#2b3674] font-bold px-5 py-2.5 rounded-2xl text-xs transition-all"
                 >
                   <FolderOpen className="w-4 h-4 text-[#5b5de5]" />
-                  <span>Selecionar Pasta Completa</span>
+                  <span>{t('source.selectFolder')}</span>
                 </button>
 
                 <button
@@ -344,7 +343,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                   className="flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#8fa0b5] hover:text-[#2b3674] font-bold px-4 py-2.5 rounded-2xl text-xs transition-all"
                 >
                   <Upload className="w-4 h-4" />
-                  <span>Selecionar Arquivo .index / HTML</span>
+                  <span>{t('source.selectFile')}</span>
                 </button>
               </div>
             </div>
@@ -377,7 +376,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 type="text"
                 value={urlInput}
                 onChange={(e) => onUrlChange(e.target.value)}
-                placeholder="https://meusite.com.br ou http://localhost:3000"
+                placeholder={t('source.urlPlaceholder')}
                 className="w-full neu-sunken-box pl-11 pr-4 py-3.5 text-xs font-mono font-bold text-[#2b3674] focus:outline-hidden"
               />
             </div>
@@ -386,14 +385,14 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
               type="submit"
               className="flex items-center justify-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 px-6 py-3.5 rounded-2xl text-xs font-black text-[#5b5de5] transition-all shrink-0"
             >
-              <span>Carregar no Simulador</span>
+              <span>{t('source.loadBtn')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
           {/* Quick Presets / Suggestions in Neumorphic Pills */}
           <div className="flex items-center gap-2 flex-wrap text-xs">
-            <span className="text-[#8fa0b5] font-bold text-[11px]">Exemplos rápidos:</span>
+            <span className="text-[#8fa0b5] font-bold text-[11px]">{t('source.quickExamples')}</span>
             {[
               { label: 'Example.com', url: 'https://example.com' },
               { label: 'Localhost:3000', url: 'http://localhost:3000' },

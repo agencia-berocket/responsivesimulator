@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import {
   Smartphone,
-  Tablet,
   Laptop,
-  Monitor,
-  ChevronDown,
-  Sparkles,
-  Sliders,
-  Check,
 } from 'lucide-react';
 import { DeviceSpec, ViewMode } from '../types';
 import { POPULAR_MOBILE_DEVICES, POPULAR_DESKTOP_DEVICES } from '../data/devices';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface RightDevicePanelProps {
   id?: string;
@@ -35,6 +30,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
   showBezel,
   onToggleBezel,
 }) => {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState<'all' | 'mobile' | 'desktop'>('all');
 
   const allDevices = [
@@ -102,7 +98,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
       {/* Panel Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-extrabold text-[#2b3674] tracking-tight">
-          Dispositivos
+          {t('device.title')}
         </h2>
       </div>
 
@@ -115,7 +111,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
             filter === 'all' ? 'neu-pill-active' : 'text-[#8fa0b5] hover:text-[#2b3674]'
           }`}
         >
-          Todos
+          {t('device.all')}
         </button>
         <button
           type="button"
@@ -124,7 +120,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
             filter === 'mobile' ? 'neu-pill-active' : 'text-[#8fa0b5] hover:text-[#2b3674]'
           }`}
         >
-          Mobile
+          {t('device.mobile')}
         </button>
         <button
           type="button"
@@ -133,7 +129,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
             filter === 'desktop' ? 'neu-pill-active' : 'text-[#8fa0b5] hover:text-[#2b3674]'
           }`}
         >
-          Desktop
+          {t('device.desktop')}
         </button>
       </div>
 
@@ -172,7 +168,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
                   ? 'neu-sunken border border-[#5b5de5]/40 ring-1 ring-[#5b5de5]/30 bg-[#e0e9f6]'
                   : 'neu-raised-sm hover:scale-[1.02] active:scale-[0.98] hover:bg-[#ebf2fb]'
               }`}
-              title={`Clique para simular em ${device.name} (${device.width} × ${device.height})`}
+              title={t('device.simulateTip', { name: device.name, w: device.width, h: device.height })}
             >
               {/* Left: Device brand icon + Name & Resolution */}
               <div className="flex items-center gap-2.5 min-w-0">
@@ -222,7 +218,7 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
                       isActive ? 'bg-[#5b5de5] shadow-[0_0_6px_rgba(91,93,229,0.8)]' : 'bg-[#a3b1c2]'
                     }`}
                   />
-                  <span>{isActive ? 'ATIVO' : 'VER'}</span>
+                  <span>{isActive ? t('device.active') : t('device.view')}</span>
                 </div>
               </div>
             </div>
@@ -240,11 +236,11 @@ export const RightDevicePanel: React.FC<RightDevicePanelProps> = ({
           }`}
         >
           <span className={`w-2 h-2 rounded-full ${showBezel ? 'bg-[#5b5de5]' : 'bg-[#a3b1c2]'}`} />
-          <span>Molduras</span>
+          <span>{t('device.frames')}</span>
         </button>
 
         <span className="text-[11px] text-[#8fa0b5] font-semibold">
-          Retina 2x / 3x
+          {t('device.retina')}
         </span>
       </div>
     </div>
