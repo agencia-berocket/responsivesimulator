@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ViewMode, SourceType } from '../types';
 import {
   Smartphone,
@@ -53,23 +53,36 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSuperFocus,
 }) => {
   const { t, lang, setLang, isAuto, setAutoLanguage } = useLanguage();
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <header
       id={id}
-      className="w-full pt-4 pb-2 px-6 flex flex-col gap-4 select-none"
+      className="w-full pt-3 sm:pt-4 pb-2 px-3 sm:px-6 flex flex-col gap-3 sm:gap-4 select-none"
     >
       {/* Top Row: Project Source Pill + Action Controls */}
-      <div className="flex items-center justify-between gap-4">
-        {/* Right side: Project Source Pill (matching the embossed user pill in ref) */}
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        {/* Project Source Pill */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
             type="button"
             onClick={onOpenSourcePanel}
-            className="flex items-center gap-2.5 neu-raised-sm px-3.5 py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all text-left"
+            className="flex items-center gap-2.5 neu-raised-sm px-3 sm:px-3.5 py-2 sm:py-1.5 rounded-full hover:scale-105 active:scale-95 transition-all text-left min-h-[44px] sm:min-h-0"
             title={t('header.sourcePanelTitle')}
           >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#5b5de5] to-[#7f81f8] text-white flex items-center justify-center text-[11px] font-bold shadow-xs">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#5b5de5] to-[#7f81f8] text-white flex items-center justify-center text-[11px] font-bold shadow-xs shrink-0">
               {sourceType === 'local-project' ? (
                 <FolderArchive className="w-3.5 h-3.5" />
               ) : (
@@ -77,22 +90,22 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-xs font-extrabold text-[#2b3674] leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-extrabold text-[#2b3674] leading-tight truncate max-w-[120px] sm:max-w-[200px]">
                 {sourceType === 'local-project' && projectName
                   ? `@${projectName.toLowerCase().replace(/\s+/g, '-')}`
                   : sourceType === 'url' && activeUrl
                   ? `@${activeUrl.replace(/^https?:\/\//, '').split('/')[0]}`
                   : '@projeto.local'}
               </span>
-              <span className="text-[10px] text-[#8fa0b5] font-semibold">
+              <span className="text-[10px] text-[#8fa0b5] font-semibold truncate">
                 {sourceType === 'local-project'
                   ? t('header.filesCount', { n: totalFiles || 0 })
                   : t('header.urlActive')}
               </span>
             </div>
 
-            <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse ml-1" />
+            <div className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse ml-0.5 shrink-0" />
           </button>
 
           {/* Super Focus Button */}
@@ -100,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onToggleSuperFocus}
-              className="flex items-center gap-1.5 neu-raised-sm hover:scale-105 active:scale-95 px-3.5 py-2 rounded-2xl text-xs font-black text-[#5b5de5] hover:text-[#4344be] transition-all bg-[#edf2fa]"
+              className="flex items-center gap-1.5 neu-raised-sm hover:scale-105 active:scale-95 px-3 py-2 rounded-2xl text-xs font-black text-[#5b5de5] hover:text-[#4344be] transition-all bg-[#edf2fa] min-h-[44px] sm:min-h-0"
               title={t('header.superFocusTitle')}
             >
               <Maximize2 className="w-4 h-4 text-[#5b5de5]" />
@@ -113,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onCaptureScreenshot}
             disabled={isCapturing}
-            className="hidden sm:flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 px-4 py-2 rounded-2xl text-xs font-bold text-[#2b3674] transition-all disabled:opacity-50"
+            className="hidden sm:flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 px-4 py-2 rounded-2xl text-xs font-bold text-[#2b3674] transition-all disabled:opacity-50 min-h-[44px] sm:min-h-0"
             title={t('header.captureTitle')}
           >
             <Camera className={`w-4 h-4 text-[#5b5de5] ${isCapturing ? 'animate-spin' : ''}`} />
@@ -125,7 +138,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenExportModal}
-              className="flex items-center gap-1.5 neu-raised-sm hover:scale-105 active:scale-95 px-3.5 py-2 rounded-2xl text-xs font-bold text-[#5b5de5] transition-all"
+              className="flex items-center gap-1.5 neu-raised-sm hover:scale-105 active:scale-95 px-3 py-2 rounded-2xl text-xs font-bold text-[#5b5de5] transition-all min-h-[44px] sm:min-h-0"
               title={t('header.exportTitle')}
             >
               <Download className="w-4 h-4 text-[#5b5de5]" />
@@ -133,11 +146,12 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Language Selector Dropdown */}
-          <div className="relative group">
+          {/* Language Selector Dropdown (Touch-friendly & Desktop click/hover) */}
+          <div className="relative" ref={langMenuRef}>
             <button
               type="button"
-              className="flex items-center gap-1.5 neu-raised-sm px-3 py-2 rounded-2xl text-xs font-extrabold text-[#2b3674] hover:text-[#5b5de5] transition-all"
+              onClick={() => setIsLangOpen((prev) => !prev)}
+              className="flex items-center gap-1.5 neu-raised-sm px-3 py-2 rounded-2xl text-xs font-extrabold text-[#2b3674] hover:text-[#5b5de5] active:scale-95 transition-all min-h-[44px] sm:min-h-0"
               title={isAuto ? `Idioma do Navegador (${lang.toUpperCase()})` : `Idioma: ${lang.toUpperCase()}`}
             >
               <Languages className="w-4 h-4 text-[#5b5de5]" />
@@ -149,54 +163,62 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            <div className="absolute right-0 top-full mt-2 hidden group-hover:flex flex-col bg-[#e6edf7] neu-raised p-2 rounded-2xl shadow-xl z-50 min-w-[150px] text-xs font-bold border border-white/60">
-              <button
-                type="button"
-                onClick={setAutoLanguage}
-                className={`px-3 py-2 text-left rounded-xl transition-all flex items-center justify-between ${
-                  isAuto ? 'neu-pill-active text-[#5b5de5]' : 'hover:bg-[#f0f4fa] text-[#2b3674]'
-                }`}
-              >
-                <span>Navegador (Auto)</span>
-                <span className="text-[10px] font-mono text-[#8fa0b5]">
-                  {detectBrowserLanguage().toUpperCase()}
-                </span>
-              </button>
-              <div className="my-1 border-t border-slate-300/40" />
-              {(['pt', 'en', 'es', 'fr'] as Lang[]).map((l) => (
+            {isLangOpen && (
+              <div className="absolute right-0 top-full mt-2 flex flex-col bg-[#e6edf7] neu-raised p-2 rounded-2xl shadow-xl z-50 min-w-[150px] text-xs font-bold border border-white/60 animate-in fade-in duration-150">
                 <button
-                  key={l}
                   type="button"
-                  onClick={() => setLang(l)}
-                  className={`px-3 py-1.5 text-left rounded-xl transition-all flex items-center justify-between ${
-                    !isAuto && lang === l ? 'neu-pill-active text-[#5b5de5]' : 'hover:bg-[#f0f4fa] text-[#2b3674]'
+                  onClick={() => {
+                    setAutoLanguage();
+                    setIsLangOpen(false);
+                  }}
+                  className={`px-3 py-2 text-left rounded-xl transition-all flex items-center justify-between min-h-[40px] ${
+                    isAuto ? 'neu-pill-active text-[#5b5de5]' : 'hover:bg-[#f0f4fa] text-[#2b3674]'
                   }`}
                 >
-                  <span>
-                    {l === 'pt'
-                      ? 'Português'
-                      : l === 'en'
-                      ? 'English'
-                      : l === 'es'
-                      ? 'Español'
-                      : 'Français'}
+                  <span>Navegador (Auto)</span>
+                  <span className="text-[10px] font-mono text-[#8fa0b5]">
+                    {detectBrowserLanguage().toUpperCase()}
                   </span>
-                  <span className="text-[10px] font-mono text-[#8fa0b5]">{l.toUpperCase()}</span>
                 </button>
-              ))}
-            </div>
+                <div className="my-1 border-t border-slate-300/40" />
+                {(['pt', 'en', 'es', 'fr'] as Lang[]).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => {
+                      setLang(l);
+                      setIsLangOpen(false);
+                    }}
+                    className={`px-3 py-2 text-left rounded-xl transition-all flex items-center justify-between min-h-[40px] ${
+                      !isAuto && lang === l ? 'neu-pill-active text-[#5b5de5]' : 'hover:bg-[#f0f4fa] text-[#2b3674]'
+                    }`}
+                  >
+                    <span>
+                      {l === 'pt'
+                        ? 'Português'
+                        : l === 'en'
+                        ? 'English'
+                        : l === 'es'
+                        ? 'Español'
+                        : 'Français'}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#8fa0b5]">{l.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Second Row: Big Headline Metric + View Mode Segmented Pill Track */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
         {/* Left: Big Metric with percentage pill */}
-        <div className="flex items-center gap-3">
-          <span className="text-2xl sm:text-3xl font-black text-[#2b3674] tracking-tight font-mono">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xl sm:text-3xl font-black text-[#2b3674] tracking-tight font-mono">
             {viewMode === 'mobile-only' ? t('view.mobile') : t('view.desktop')}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 neu-raised-sm px-2.5 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-emerald-600 neu-raised-sm px-2.5 py-1 rounded-full">
             <Sparkles className="w-3 h-3 text-emerald-500" />
             <span>{t('header.retina')}</span>
           </span>
@@ -207,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onViewModeChange('mobile-only')}
-            className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-1.5 rounded-full transition-all flex items-center gap-1.5 min-h-[40px] sm:min-h-0 ${
               viewMode === 'mobile-only'
                 ? 'neu-pill-active'
                 : 'text-[#8fa0b5] hover:text-[#2b3674]'
@@ -220,7 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => onViewModeChange('desktop-only')}
-            className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 sm:px-4 py-2 sm:py-1.5 rounded-full transition-all flex items-center gap-1.5 min-h-[40px] sm:min-h-0 ${
               viewMode === 'desktop-only'
                 ? 'neu-pill-active'
                 : 'text-[#8fa0b5] hover:text-[#2b3674]'

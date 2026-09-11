@@ -383,20 +383,20 @@ export default function App() {
       : ''; // URL mode: getDisplayMedia is used inside screenshot.ts
 
   return (
-    <div className="min-h-screen bg-[#e5edf7] text-[#2b3674] flex items-center justify-center p-2 sm:p-4 lg:p-6 selection:bg-[#5b5de5] selection:text-white">
+    <div className="min-h-screen bg-[#e5edf7] text-[#2b3674] flex items-center justify-center p-1 sm:p-4 lg:p-6 selection:bg-[#5b5de5] selection:text-white">
       {/* Toast Notification with Neumorphic styling */}
       {notification && (
-        <div className="fixed top-8 right-8 z-50 neu-raised text-[#2b3674] text-xs font-bold px-4 py-3 rounded-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-4 sm:top-8 right-4 sm:right-8 z-50 neu-raised text-[#2b3674] text-xs font-bold px-4 py-3 rounded-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-200 max-w-[90vw]">
           <div className="w-5 h-5 rounded-full bg-[#e6edf7] text-[#5b5de5] flex items-center justify-center shrink-0 shadow-xs neu-sunken">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
           </div>
-          <span>{notification}</span>
+          <span className="truncate">{notification}</span>
         </div>
       )}
 
-      {/* Master Sculpted Dashboard Panel strictly matching the user's reference image */}
-      <div className="neu-dashboard-panel w-full max-w-[1740px] min-h-[92vh] flex flex-col md:flex-row p-3 sm:p-4 gap-3 lg:gap-4 overflow-hidden">
-        {/* 1. Left Lateral Navigation Rail with glossy indigo drop logo and soft 3D buttons */}
+      {/* Master Sculpted Dashboard Panel strictly matching reference image */}
+      <div className="neu-dashboard-panel w-full max-w-[1740px] min-h-[92vh] flex flex-col md:flex-row p-2 sm:p-4 gap-3 lg:gap-4 overflow-hidden">
+        {/* 1. Left Lateral Navigation Rail on Desktop & Mobile Bottom Nav Bar on Mobile */}
         <NavigationRail
           id="app-nav-rail"
           activeTab={activeNavTab}
@@ -457,15 +457,15 @@ export default function App() {
             onToggleSuperFocus={() => setIsSuperFocus(true)}
           />
 
-          <main className="flex-1 min-w-0 px-2 sm:px-4 py-2 flex flex-col gap-5 overflow-y-auto max-h-[calc(100vh-140px)] pr-2">
-            {/* Quick Breakpoint Bar in Neumorphic Raised Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 neu-raised-sm rounded-2xl px-5 py-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <span className="text-[#8fa0b5] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+          <main className="flex-1 min-w-0 px-2 sm:px-4 py-2 flex flex-col gap-4 sm:gap-5 overflow-y-auto max-h-[calc(100vh-130px)] md:max-h-[calc(100vh-140px)] pr-2 pb-20 md:pb-2">
+            {/* Quick Breakpoint Bar in Neumorphic Raised Bar (Touch Swipeable on Mobile) */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 neu-raised-sm rounded-2xl p-3 sm:px-5 sm:py-3 text-xs">
+              <div className="flex items-center gap-2 max-w-full overflow-hidden">
+                <span className="text-[#8fa0b5] font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0">
                   <Sparkles className="w-3.5 h-3.5 text-[#5b5de5]" />
                   {t('bp.label')}
                 </span>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap scrollbar-none py-1 px-0.5">
                   {BREAKPOINT_PRESETS.map((bp) => (
                     <button
                       key={bp.label}
@@ -499,7 +499,7 @@ export default function App() {
                           notify(t('app.bpDesktop', { w: bp.width, label: bp.label }));
                         }
                       }}
-                      className="px-3 py-1 text-[#2b3674] hover:text-[#5b5de5] rounded-full text-[11px] font-mono font-bold neu-raised-sm hover:scale-105 active:scale-95 transition-all"
+                      className="px-3 py-1.5 text-[#2b3674] hover:text-[#5b5de5] rounded-full text-[11px] font-mono font-bold neu-raised-sm hover:scale-105 active:scale-95 transition-all shrink-0 min-h-[36px]"
                     >
                       {bp.width}px
                     </button>
@@ -521,7 +521,7 @@ export default function App() {
                     setDesktopScale(0.55);
                     notify(t('app.zoomReset'));
                   }}
-                  className="text-[#5b5de5] hover:text-[#2b3674] font-bold transition-colors underline"
+                  className="text-[#5b5de5] hover:text-[#2b3674] font-bold transition-colors underline min-h-[36px] flex items-center"
                 >
                   {t('bp.resetZoom')}
                 </button>
@@ -558,9 +558,9 @@ export default function App() {
             )}
 
             {/* Responsive Device Stage: Centered Active Device (Mobile: Vertical/Portrait, Desktop: Horizontal/Landscape) */}
-            <div className="w-full flex items-start justify-center py-4 min-h-[500px]">
+            <div className="w-full flex items-start justify-center py-2 sm:py-4 min-h-[450px] sm:min-h-[500px]">
               {viewMode === 'mobile-only' ? (
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center max-w-full overflow-x-auto">
                   <DeviceFrame
                     id="mobile-device-frame"
                     device={mobileDevice}
@@ -578,7 +578,7 @@ export default function App() {
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center max-w-full overflow-x-auto">
                   <DeviceFrame
                     id="desktop-device-frame"
                     device={desktopDevice}
@@ -600,7 +600,7 @@ export default function App() {
           </main>
         </div>
 
-        {/* 3. Right Devices Watchlist Panel matching the reference image */}
+        {/* 3. Right Devices Watchlist Panel matching reference image */}
         <RightDevicePanel
           id="right-device-panel"
           activeMobileDevice={mobileDevice}

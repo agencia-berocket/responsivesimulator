@@ -105,7 +105,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
   return (
     <div
       id={id}
-      className="w-full neu-raised p-6 sm:p-7 select-none transition-all"
+      className="w-full neu-raised p-4 sm:p-7 select-none transition-all"
     >
       {/* Hidden native inputs for directory and single/multiple files */}
       <input
@@ -126,13 +126,13 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
       />
 
       {/* Main Tabs Selector in Neumorphic Sunken Track */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/60 pb-4 mb-5">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center neu-sunken p-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/60 pb-4 mb-4 sm:mb-5">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center neu-sunken p-1 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => onSourceTypeChange('local-project')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all min-h-[44px] ${
                 isLocalActive
                   ? 'neu-pill-active'
                   : 'text-[#8fa0b5] hover:text-[#2b3674]'
@@ -148,7 +148,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
             <button
               type="button"
               onClick={() => onSourceTypeChange('url')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold transition-all min-h-[44px] ${
                 isUrlActive
                   ? 'neu-pill-active'
                   : 'text-[#8fa0b5] hover:text-[#2b3674]'
@@ -180,7 +180,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
       {isLocalActive && (
         <div>
           {isLoadingLocal ? (
-            <div className="p-8 neu-sunken-box flex flex-col items-center justify-center text-center gap-3">
+            <div className="p-6 sm:p-8 neu-sunken-box flex flex-col items-center justify-center text-center gap-3">
               <RefreshCw className="w-8 h-8 text-[#5b5de5] animate-spin" />
               <p className="text-sm font-bold text-[#2b3674]">
                 {t('source.loading')}
@@ -192,14 +192,14 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
           ) : localProject ? (
             /* Card de projeto carregado */
             <div className="space-y-4">
-              <div className="p-5 rounded-2xl neu-raised-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="p-4 sm:p-5 rounded-2xl neu-raised-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl neu-sunken flex items-center justify-center text-[#5b5de5] shrink-0 shadow-xs">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl neu-sunken flex items-center justify-center text-[#5b5de5] shrink-0 shadow-xs">
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-base font-black text-[#2b3674]">
+                      <span className="text-sm sm:text-base font-black text-[#2b3674] truncate">
                         {localProject.folderName}
                       </span>
                       <span className="bg-[#e6edf7] text-[#5b5de5] text-[10px] font-bold px-2 py-0.5 rounded-full neu-sunken">
@@ -211,7 +211,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                     </div>
                     <p className="text-xs text-[#8fa0b5] mt-1 flex items-center gap-1.5 flex-wrap font-semibold">
                       <span>{t('source.entryPoint')}</span>
-                      <span className="font-mono text-[#2b3674] bg-[#e6edf7] px-2 py-0.5 rounded font-bold">
+                      <span className="font-mono text-[#2b3674] bg-[#e6edf7] px-2 py-0.5 rounded font-bold truncate max-w-[150px]">
                         {localProject.entryFileName}
                       </span>
                       <span className="text-[#a3b1c2]">•</span>
@@ -224,11 +224,11 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                <div className="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                   <button
                     type="button"
                     onClick={() => setShowFileList((prev) => !prev)}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#2b3674] neu-raised-sm px-3.5 py-2 rounded-xl hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 text-xs font-bold text-[#2b3674] neu-raised-sm px-3.5 py-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all min-h-[44px]"
                   >
                     <span>{t('source.structure')}</span>
                     {showFileList ? (
@@ -241,7 +241,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                   <button
                     type="button"
                     onClick={() => folderInputRef.current?.click()}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#5b5de5] neu-raised-sm px-4 py-2 rounded-xl hover:scale-105 active:scale-95 transition-all"
+                    className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 text-xs font-bold text-[#5b5de5] neu-raised-sm px-4 py-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all min-h-[44px]"
                   >
                     <FolderOpen className="w-4 h-4" />
                     <span>{t('source.changeFolder')}</span>
@@ -252,7 +252,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
               {/* Collapsible File Explorer */}
               {showFileList && (
                 <div className="neu-sunken-box p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-1">
                     <span className="text-xs font-bold text-[#2b3674]">
                       {t('source.loadedFiles')}
                     </span>
@@ -276,19 +276,19 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                             }
                           }}
                           disabled={!isHtml}
-                          className={`flex items-center justify-between p-2 rounded-xl text-left transition-all ${
+                          className={`flex items-center justify-between p-2.5 rounded-xl text-left transition-all min-h-[44px] ${
                             isEntry
                               ? 'neu-pill-active'
                               : isHtml
-                              ? 'neu-raised-sm hover:scale-[1.02] cursor-pointer'
+                              ? 'neu-raised-sm hover:scale-[1.02] active:scale-98 cursor-pointer'
                               : 'opacity-60 bg-[#f0f4fa]/50 text-[#8fa0b5]'
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate">
                             {isHtml ? (
-                              <FileCode className={`w-3.5 h-3.5 shrink-0 ${isEntry ? 'text-[#5b5de5]' : 'text-[#8fa0b5]'}`} />
+                              <FileCode className={`w-4 h-4 shrink-0 ${isEntry ? 'text-[#5b5de5]' : 'text-[#8fa0b5]'}`} />
                             ) : (
-                              <FileText className="w-3.5 h-3.5 text-[#a3b1c2] shrink-0" />
+                              <FileText className="w-4 h-4 text-[#a3b1c2] shrink-0" />
                             )}
                             <span className="text-xs font-mono truncate">{file.path}</span>
                           </div>
@@ -308,18 +308,18 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`neu-sunken-box p-8 sm:p-10 border-2 border-dashed transition-all duration-200 text-center flex flex-col items-center justify-center gap-4 ${
+              className={`neu-sunken-box p-6 sm:p-10 border-2 border-dashed transition-all duration-200 text-center flex flex-col items-center justify-center gap-4 ${
                 isDragging
                   ? 'border-[#5b5de5] bg-[#eaf0f8]'
                   : 'border-[#a3b1c2]/50 hover:border-[#5b5de5]/70'
               }`}
             >
-              <div className="w-16 h-16 rounded-3xl neu-raised flex items-center justify-center text-[#5b5de5]">
-                <FolderArchive className="w-8 h-8 stroke-[1.75]" />
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl neu-raised flex items-center justify-center text-[#5b5de5]">
+                <FolderArchive className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.75]" />
               </div>
 
               <div className="max-w-md">
-                <h3 className="text-base font-extrabold text-[#2b3674] tracking-tight">
+                <h3 className="text-sm sm:text-base font-extrabold text-[#2b3674] tracking-tight">
                   {t('source.dragTitle')}
                 </h3>
                 <p className="text-xs text-[#8fa0b5] mt-1 font-semibold leading-relaxed">
@@ -327,11 +327,11 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-2 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => folderInputRef.current?.click()}
-                  className="flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#2b3674] font-bold px-5 py-2.5 rounded-2xl text-xs transition-all"
+                  className="flex items-center justify-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#2b3674] font-bold px-5 py-3 rounded-2xl text-xs transition-all min-h-[44px]"
                 >
                   <FolderOpen className="w-4 h-4 text-[#5b5de5]" />
                   <span>{t('source.selectFolder')}</span>
@@ -340,7 +340,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#8fa0b5] hover:text-[#2b3674] font-bold px-4 py-2.5 rounded-2xl text-xs transition-all"
+                  className="flex items-center justify-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 text-[#8fa0b5] hover:text-[#2b3674] font-bold px-4 py-3 rounded-2xl text-xs transition-all min-h-[44px]"
                 >
                   <Upload className="w-4 h-4" />
                   <span>{t('source.selectFile')}</span>
@@ -377,13 +377,13 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 value={urlInput}
                 onChange={(e) => onUrlChange(e.target.value)}
                 placeholder={t('source.urlPlaceholder')}
-                className="w-full neu-sunken-box pl-11 pr-4 py-3.5 text-xs font-mono font-bold text-[#2b3674] focus:outline-hidden"
+                className="w-full neu-sunken-box pl-11 pr-4 py-3.5 text-xs font-mono font-bold text-[#2b3674] focus:outline-hidden min-h-[48px]"
               />
             </div>
 
             <button
               type="submit"
-              className="flex items-center justify-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 px-6 py-3.5 rounded-2xl text-xs font-black text-[#5b5de5] transition-all shrink-0"
+              className="flex items-center justify-center gap-2 neu-raised-sm hover:scale-105 active:scale-95 px-6 py-3.5 rounded-2xl text-xs font-black text-[#5b5de5] transition-all shrink-0 min-h-[48px]"
             >
               <span>{t('source.loadBtn')}</span>
               <ArrowRight className="w-4 h-4" />
@@ -403,7 +403,7 @@ export const ProjectSourceInput: React.FC<ProjectSourceInputProps> = ({
                 key={shortcut.label}
                 type="button"
                 onClick={() => handleShortcutUrl(shortcut.url)}
-                className="px-3 py-1 rounded-full text-[11px] font-bold text-[#2b3674] neu-raised-sm hover:text-[#5b5de5] transition-all"
+                className="px-3 py-2 rounded-full text-[11px] font-bold text-[#2b3674] neu-raised-sm hover:text-[#5b5de5] transition-all min-h-[38px]"
               >
                 {shortcut.label}
               </button>
