@@ -348,8 +348,11 @@ async function captureViaDisplayMedia(
     const cropH = iframeRect.height * ryScale;
 
     // Output at device resolution × scale (high quality)
-    const outW = Math.round(device.width * scale);
-    const outH = Math.round(device.height * scale);
+    const isLandscape = device.category === 'desktop';
+    const minDim = Math.min(device.width, device.height);
+    const maxDim = Math.max(device.width, device.height);
+    const outW = Math.round((isLandscape ? maxDim : minDim) * scale);
+    const outH = Math.round((isLandscape ? minDim : maxDim) * scale);
 
     const outCanvas = document.createElement('canvas');
     outCanvas.width = outW;
@@ -475,17 +478,23 @@ export async function captureSimulatorViewport(
   const projectTitle = options?.projectTitle || 'Simulador Responsivo';
   const html = options?.contentHtml || '';
 
+  const isLandscape = device.category === 'desktop';
+  const minDim = Math.min(device.width, device.height);
+  const maxDim = Math.max(device.width, device.height);
+  const targetW = isLandscape ? maxDim : minDim;
+  const targetH = isLandscape ? minDim : maxDim;
+
   let contentCanvas: HTMLCanvasElement | null = null;
 
   if (html) {
     // Local-project / editor / template mode
     contentCanvas = await captureHtmlInOffscreenIframe(
-      html, device.width, device.height, scale, false
+      html, targetW, targetH, scale, false
     );
 
     if (!contentCanvas || isCanvasBlank(contentCanvas)) {
       try {
-        contentCanvas = await renderHtmlFallback(html, device.width, device.height, scale);
+        contentCanvas = await renderHtmlFallback(html, targetW, targetH, scale);
       } catch {}
     }
   } else {
@@ -497,8 +506,8 @@ export async function captureSimulatorViewport(
   // Fallback: blank white canvas
   if (!contentCanvas) {
     contentCanvas = document.createElement('canvas');
-    contentCanvas.width = device.width * scale;
-    contentCanvas.height = device.height * scale;
+    contentCanvas.width = targetW * scale;
+    contentCanvas.height = targetH * scale;
     const ctx = contentCanvas.getContext('2d')!;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, contentCanvas.width, contentCanvas.height);
@@ -521,11 +530,17 @@ export async function captureSimulatorFullScroll(
   const projectTitle = options?.projectTitle || 'Simulador Responsivo';
   const html = options?.contentHtml || '';
 
+  const isLandscape = device.category === 'desktop';
+  const minDim = Math.min(device.width, device.height);
+  const maxDim = Math.max(device.width, device.height);
+  const targetW = isLandscape ? maxDim : minDim;
+  const targetH = isLandscape ? minDim : maxDim;
+
   let contentCanvas: HTMLCanvasElement | null = null;
 
   if (html) {
     contentCanvas = await captureHtmlInOffscreenIframe(
-      html, device.width, device.height, scale, true
+      html, targetW, targetH, scale, true
     );
 
     if (!contentCanvas || isCanvasBlank(contentCanvas)) {
@@ -539,8 +554,8 @@ export async function captureSimulatorFullScroll(
     contentCanvas = await captureViaDisplayMedia(frameElement, device, scale);
     if (!contentCanvas) {
       contentCanvas = document.createElement('canvas');
-      contentCanvas.width = device.width * scale;
-      contentCanvas.height = device.height * scale;
+      contentCanvas.width = targetW * scale;
+      contentCanvas.height = targetH * scale;
       const ctx = contentCanvas.getContext('2d')!;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, contentCanvas.width, contentCanvas.height);

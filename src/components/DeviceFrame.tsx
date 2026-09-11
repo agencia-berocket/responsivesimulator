@@ -44,8 +44,10 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
   isLiveConnected = false,
 }) => {
   const isLandscape = orientation === 'landscape';
-  const width = isLandscape ? device.height : device.width;
-  const height = isLandscape ? device.width : device.height;
+  const minDim = Math.min(device.width, device.height);
+  const maxDim = Math.max(device.width, device.height);
+  const width = isLandscape ? maxDim : minDim;
+  const height = isLandscape ? minDim : maxDim;
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
