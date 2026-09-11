@@ -6,7 +6,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   DeviceSpec,
-  Orientation,
   ViewMode,
   SourceType,
 } from './types';
@@ -39,11 +38,9 @@ import { useLanguage } from './i18n/LanguageContext';
 export default function App() {
   const { t } = useLanguage();
 
-  // Device selections
+  // Device selections (Mobile is always portrait, Desktop is always landscape)
   const [mobileDevice, setMobileDevice] = useState<DeviceSpec>(POPULAR_MOBILE_DEVICES[0]);
   const [desktopDevice, setDesktopDevice] = useState<DeviceSpec>(POPULAR_DESKTOP_DEVICES[0]);
-  const [mobileOrientation, setMobileOrientation] = useState<Orientation>('portrait');
-  const [desktopOrientation, setDesktopOrientation] = useState<Orientation>('landscape');
 
   // Scaling
   const [mobileScale, setMobileScale] = useState<number>(0.85);
@@ -560,17 +557,14 @@ export default function App() {
               />
             )}
 
-            {/* Responsive Device Stage: Centered Active Device (Mobile or Desktop) */}
+            {/* Responsive Device Stage: Centered Active Device (Mobile: Vertical/Portrait, Desktop: Horizontal/Landscape) */}
             <div className="w-full flex items-start justify-center py-4 min-h-[500px]">
               {viewMode === 'mobile-only' ? (
                 <div className="flex flex-col items-center">
                   <DeviceFrame
                     id="mobile-device-frame"
                     device={mobileDevice}
-                    orientation={mobileOrientation}
-                    onOrientationToggle={() =>
-                      setMobileOrientation((prev) => (prev === 'portrait' ? 'landscape' : 'portrait'))
-                    }
+                    orientation="portrait"
                     onDeviceChange={setMobileDevice}
                     availableDevices={POPULAR_MOBILE_DEVICES}
                     showBezel={showBezel}
@@ -588,10 +582,7 @@ export default function App() {
                   <DeviceFrame
                     id="desktop-device-frame"
                     device={desktopDevice}
-                    orientation={desktopOrientation}
-                    onOrientationToggle={() =>
-                      setDesktopOrientation((prev) => (prev === 'portrait' ? 'landscape' : 'portrait'))
-                    }
+                    orientation="landscape"
                     onDeviceChange={setDesktopDevice}
                     availableDevices={POPULAR_DESKTOP_DEVICES}
                     showBezel={showBezel}
@@ -648,14 +639,6 @@ export default function App() {
           setDesktopDevice(dev);
           notify(t('app.sfDevice', { name: dev.name }));
         }}
-        mobileOrientation={mobileOrientation}
-        desktopOrientation={desktopOrientation}
-        onToggleMobileOrientation={() =>
-          setMobileOrientation((prev) => (prev === 'portrait' ? 'landscape' : 'portrait'))
-        }
-        onToggleDesktopOrientation={() =>
-          setDesktopOrientation((prev) => (prev === 'portrait' ? 'landscape' : 'portrait'))
-        }
         showBezel={showBezel}
         onToggleBezel={() => setShowBezel((prev) => !prev)}
         sourceType={sourceType === 'url' ? 'url' : sourceType === 'local-project' ? 'local-project' : 'template'}

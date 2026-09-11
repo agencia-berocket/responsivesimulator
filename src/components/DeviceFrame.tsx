@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { DeviceSpec, Orientation } from '../types';
-import { RotateCw, Maximize2, ExternalLink, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Maximize2, ExternalLink, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface DeviceFrameProps {
   id?: string;
   device: DeviceSpec;
   orientation: Orientation;
-  onOrientationToggle?: () => void;
   onDeviceChange?: (device: DeviceSpec) => void;
   availableDevices?: DeviceSpec[];
   showBezel: boolean;
@@ -28,7 +27,6 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
   id,
   device,
   orientation,
-  onOrientationToggle,
   onDeviceChange,
   availableDevices = [],
   showBezel,
@@ -138,17 +136,6 @@ export const DeviceFrame: React.FC<DeviceFrameProps> = ({
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
               </div>
-            )}
-
-            {onOrientationToggle && (
-              <button
-                type="button"
-                onClick={onOrientationToggle}
-                title={`Alternar para ${isLandscape ? 'Retrato' : 'Paisagem'}`}
-                className="p-1.5 neu-raised-sm text-[#8fa0b5] hover:text-[#2b3674] rounded-xl transition-all"
-              >
-                <RotateCw className="w-3.5 h-3.5" />
-              </button>
             )}
 
             <button

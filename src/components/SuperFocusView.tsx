@@ -13,7 +13,6 @@ import {
   Minimize2,
   Smartphone,
   Laptop,
-  RotateCw,
   RefreshCw,
   Camera,
   Download,
@@ -23,7 +22,6 @@ import {
   Check,
   EyeOff,
   Eye,
-  SlidersHorizontal,
 } from 'lucide-react';
 
 interface SuperFocusViewProps {
@@ -36,10 +34,6 @@ interface SuperFocusViewProps {
   activeDesktopDevice: DeviceSpec;
   onSelectMobileDevice: (device: DeviceSpec) => void;
   onSelectDesktopDevice: (device: DeviceSpec) => void;
-  mobileOrientation: Orientation;
-  desktopOrientation: Orientation;
-  onToggleMobileOrientation: () => void;
-  onToggleDesktopOrientation: () => void;
   showBezel: boolean;
   onToggleBezel: () => void;
   sourceType: 'local-project' | 'url' | 'template';
@@ -64,10 +58,6 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
   activeDesktopDevice,
   onSelectMobileDevice,
   onSelectDesktopDevice,
-  mobileOrientation,
-  desktopOrientation,
-  onToggleMobileOrientation,
-  onToggleDesktopOrientation,
   showBezel,
   onToggleBezel,
   sourceType,
@@ -115,8 +105,7 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
 
   const isMobile = viewMode === 'mobile-only';
   const currentDevice = isMobile ? activeMobileDevice : activeDesktopDevice;
-  const currentOrientation = isMobile ? mobileOrientation : desktopOrientation;
-  const toggleOrientation = isMobile ? onToggleMobileOrientation : onToggleDesktopOrientation;
+  const currentOrientation: Orientation = isMobile ? 'portrait' : 'landscape';
   const deviceList = isMobile ? POPULAR_MOBILE_DEVICES : POPULAR_DESKTOP_DEVICES;
 
   const handleZoomIn = () => setScale((s) => Math.min(1.5, +(s + 0.1).toFixed(2)));
@@ -128,7 +117,7 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
       id={id}
       className="fixed inset-0 z-50 bg-[#e5edf7] flex flex-col overflow-hidden animate-in fade-in duration-200"
     >
-      {/* 1. DOCKED TOP BAR (Clean, compact 52px height, strictly docked so it NEVER overlaps the canvas) */}
+      {/* 1. DOCKED TOP BAR */}
       {!isBarHidden ? (
         <header className="shrink-0 w-full h-[52px] bg-[#f0f4fa]/95 backdrop-blur-md border-b border-[#d0dbe8] px-4 flex items-center justify-between gap-3 shadow-xs select-none z-30 transition-all">
           {/* Left: Mobile / Desktop pill switch + Device Selector dropdown */}
@@ -248,17 +237,6 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
 
           {/* Right: Quick Tools + Hide Bar + Exit */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Orientation */}
-            <button
-              type="button"
-              onClick={toggleOrientation}
-              className="hidden sm:flex items-center gap-1 neu-raised-sm hover:scale-105 active:scale-95 px-2.5 py-1 rounded-xl text-xs font-bold text-[#2b3674] transition-all"
-              title="Girar Orientação (Retrato / Paisagem)"
-            >
-              <RotateCw className="w-3.5 h-3.5 text-[#5b5de5]" />
-              <span className="capitalize text-[11px]">{currentOrientation}</span>
-            </button>
-
             {/* Moldura Bezel */}
             <button
               type="button"
@@ -366,7 +344,7 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
               </button>
             )}
 
-            {/* Ocultar Barra (Hide Controls for 100% pure focus) */}
+            {/* Ocultar Barra */}
             <button
               type="button"
               onClick={() => setIsBarHidden(true)}
@@ -390,7 +368,7 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
           </div>
         </header>
       ) : (
-        /* MINIMAL FLOATING CAPSULE (When user chose to hide the bar) */
+        /* MINIMAL FLOATING CAPSULE */
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 neu-raised px-3 py-1.5 rounded-full bg-[#f0f4fa]/90 backdrop-blur-md shadow-lg border border-[#d0dbe8] animate-in fade-in slide-in-from-top-2 duration-200">
           <span className="text-xs font-extrabold text-[#5b5de5]">
             {currentDevice.name}
@@ -451,7 +429,7 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
         </div>
       )}
 
-      {/* 2. CENTER MAXIMIZED DEVICE CANVAS (Strictly in flex-1 min-h-0 with clean padding, NEVER overlaps the header) */}
+      {/* 2. CENTER MAXIMIZED DEVICE CANVAS */}
       <div
         className="flex-1 min-h-0 w-full overflow-auto flex flex-col items-center justify-start p-4 sm:p-8"
         onClick={() => setIsDeviceDropdownOpen(false)}
@@ -461,7 +439,6 @@ export const SuperFocusView: React.FC<SuperFocusViewProps> = ({
             id="super-focus-device-frame"
             device={currentDevice}
             orientation={currentOrientation}
-            onOrientationToggle={toggleOrientation}
             onDeviceChange={(dev) => {
               if (isMobile) {
                 onSelectMobileDevice(dev);
